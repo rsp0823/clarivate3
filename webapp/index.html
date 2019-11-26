@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>HelloWorld</title>
+	</head>
+	<body class="sapUiBody">
+		<div data-sap-ui-component data-name="helloworld.HelloWorld" data-id="container" data-settings='{"id" : "HelloWorld"}'></div>
+		<div style="border-radius: 5px;background-color:white;padding:20px;width:1057px;height:80px;border-color:#000000;border-style: solid;border-width: 1px"><input type="text" id="url" name="UTMFix" value="utm_source=clarivate&utm_medium=email&utm_content=external&utm_content_id=" readonly size='110' style="font-family: Arial;font-size: 14px; background-color:#e5e6e6;border: 1px solid #808080;display: inline-block;border-radius: 3px;box-sizing: border-box;padding: 5px 5px;"></div>
+    	<div style="border-radius: 5px;background-color: #f2f2f2;padding:0px;position: absolute; top:29px;left:860px"><input type="text" name="UTMCamp" id="cmp" size='25' style="font-family: Arial;font-size:14px;border: 1px solid #808080;display: inline-block;border-radius: 3px;box-sizing: border-box;padding: 5px 5px;"></div>
+		<div style="position: absolute; top:80px;left:860px;"><button type="button" id="create" style="font-family: Arial;font-size:15px;border:1px solid #000000;display:inline-block;border-radius:3px;padding: 5px;width:100px;height:30px;background-color:#e5e6e6">Create File</button></div>
+    	<div style="position: absolute; top:90px;left:740px;"><a id="downloadlink" style="display:none;font-family: Arial;font-size:15px">Download File</a></div>
+    
+    <script> 
+    
+         var data = null;
+         var datadwnld = null;
+         var htmldwnld;
+         //var obj ;
+         var xhr = new XMLHttpRequest();
+         var xhr_dwnld = new XMLHttpRequest();
+         xhr.withCredentials = false;
+         xhr_dwnld.withCredentials = false;
+         var Message = getUrlVars()["Id"];
+         
+        var user = getUrlVars()["CreatedBy"];
+        var contId = getUrlVars()["Id"];
+
+        var baseurl = "utm_source=clarivate&utm_medium=email&utm_content=external&utm_content_id=";
+        var alias = "&utm_alias=";
+        var strcont = contId.concat(alias);
+        var strusr = strcont.concat(user);
+        var camp = "&utm_campaign=";
+        var strcmp = strusr.concat(camp);
+        var urlfnl = baseurl.concat(strcmp);
+        document.getElementById("url").value = urlfnl;
+         
+         //var Message = 2;
+         
+         xhr.addEventListener("readystatechange", function () {
+         	
+          if (this.readyState === this.DONE) {
+            console.log(this.responseText);
+            var objresp = this.responseText;
+            var obj = JSON.parse(objresp);
+            console.log(obj.d.results[0].MessageUUID);
+            var guid = obj.d.results[0].MessageUUID;
+             nextcall(guid);
+             }
+         });
+         
+         xhr_dwnld.addEventListener("readystatechange", function () {
+         	
+          if (this.readyState === this.DONE) {
+            console.log(this.responseText);
+            var objresp = this.responseText;
+            var obj = JSON.parse(objresp);
+            console.log(obj.d.results[0].MessageContentHTMLString);
+            htmldwnld = obj.d.results[0].MessageContentHTMLString;
+            //var guid = obj.d.results[0].MessageUUID;
+             //nextcall(guid);
+             }
+         });
+         
+         var url = "/campaign/sap/opu/odata/sap/API_MKT_CAMPAIGN_MESSAGE_SRV/Messages?$top=10&$filter=Message%20eq%20#id&$select=MessageUUID";
+         var urlres = url.replace("#id",Message);
+         console.log(urlres);
+         xhr.open("GET", "/campaign/sap/opu/odata/sap/API_MKT_CAMPAIGN_MESSAGE_SRV/Messages?$top=10&$filter=Message%20eq%202&$select=MessageUUID");
+         xhr.setRequestHeader("Content-Type", "application/json");
+         xhr.setRequestHeader("Accept", "application/json");
+         xhr.send(data);
+        function nextcall(guid){
+         var urldownload = "/campaign/sap/opu/odata/sap/API_MKT_CAMPAIGN_MESSAGE_SRV/Messages(guid'#guid')/MessageContents?select=MessageContentHTMLString"
+         var urldownloadres = urldownload.replace("#guid",guid)
+         xhr_dwnld.open("GET", urldownloadres);
+         xhr_dwnld.setRequestHeader("Content-Type", "application/json");
+         xhr_dwnld.setRequestHeader("Accept", "application/json");
+         xhr_dwnld.send(datadwnld);
+         }
+         
+         function getUrlVars() {
+	        var url = window.location.href
+			var dec = decodeURI(url);
+			var vars = {};
+			var parts = dec.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+    		vars[key] = value;
+    });
+    return vars;
+}       
+
+	var contId = getUrlVars()["Id"];
+    
+    ( function () { var textFile = null,  makeTextFile = function (text) {    var data = new Blob([text], {type: 'text/plain'}); if (textFile !== null) { window.URL.revokeObjectURL(textFile); }
+    textfile = window.URL.createObjectURL(data);return textfile;}; var create = document.getElementById('create');create.addEventListener('click', function () { var link = document.getElementById('downloadlink');
+    var str = htmldwnld;
+    var temp = document.getElementById('cmp').value; var res = str.replace(/&cntid/g,temp );var file = temp.concat(".html"); link.href = makeTextFile(res);link.download=file;
+    link.style.display = 'block';}, false);})();
+    </script>
+	</body>
+</html>
